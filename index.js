@@ -43,8 +43,8 @@ app.get('/me', (req, res) => {
   res.status(200).json({
     name: 'Ayodeji Arib',   
     email: 'dejiwilliams9@gmail.com',     
-    github: 'https://github.com/deji2ghost',
-    repo_name: "https://github.com/deji2ghost/personal-api"
+    github_url: 'https://github.com/deji2ghost',
+    repo_name: "personal-api"
   });
 });
 
