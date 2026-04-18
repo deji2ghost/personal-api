@@ -1,11 +1,21 @@
 const express = require('express');
+const os = require('os');
 const app = express();
 const PORT = 3000;
-const os = require("os");
-const API_KEY = "hng-secret";
+
+const API_KEY = "PUT_THE_KEY_FROM_DISCORD_HERE"; // ← this is the critical part
 
 const authMiddleware = (req, res, next) => {
-  const key = req.headers["x-api-key"];
+  const apiKeyHeader = req.headers["x-api-key"];
+  const authHeader = req.headers["authorization"];
+
+  let key = null;
+
+  if (apiKeyHeader) {
+    key = apiKeyHeader;
+  } else if (authHeader && authHeader.startsWith("Bearer ")) {
+    key = authHeader.split(" ")[1];
+  }
 
   if (!key || key !== API_KEY) {
     return res.status(401).json({ message: "Unauthorized" });
@@ -14,25 +24,30 @@ const authMiddleware = (req, res, next) => {
   next();
 };
 
+// ✅ This line is the key fix — auth applies to ALL routes now
+app.use(authMiddleware);
+
 // GET /
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'API is running' });
 });
 
 // GET /health
-app.get("/health", (req, res) => {
-  const cpu = os.loadavg()[0].toFixed(2);
-  const memory = (process.memoryUsage().rss / 1024 / 1024).toFixed(2);
+app.get('/health', (req, res) => {
+  const totalMem = os.totalmem();
+  const usedMem = totalMem - os.freemem();
+  const cpuLoad = os.loadavg()[0].toFixed(2);
+  const memoryMB = (usedMem / 1024 / 1024).toFixed(2);
 
   res.status(200).json({
-    status: "ok",
-    cpu: cpu,
-    memory: memory
+    message: 'healthy',
+    cpu: `${cpuLoad}%`,
+    memory: `${memoryMB}MB`
   });
 });
 
 // GET /me
-app.get('/me', authMiddleware, (req, res) => {
+app.get('/me', (req, res) => {
   res.status(200).json({
     name: 'Ayodeji Arib',
     email: 'dejiwilliams9@gmail.com',
