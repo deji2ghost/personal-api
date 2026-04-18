@@ -2,8 +2,7 @@ const express = require('express');
 const app = express();
 const PORT = 3000;
 const os = require("os");
-
-const API_KEY = process.env.API_KEY || "test123";
+const API_KEY = "hng-secret";
 
 const authMiddleware = (req, res, next) => {
   const key = req.headers["x-api-key"];
@@ -15,42 +14,32 @@ const authMiddleware = (req, res, next) => {
   next();
 };
 
-app.use("/me", authMiddleware);
-
-// Endpoint 1: GET /
+// GET /
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'API is running' });
 });
 
-// Endpoint 2: GET /health
-// app.get('/health', (req, res) => {
-//   res.status(200).json({ message: 'healthy' });
-// });
+// GET /health
 app.get("/health", (req, res) => {
-  const cpuUsage = os.loadavg()[0]; // simple CPU indicator
-  const memoryUsage = process.memoryUsage().rss / (1024 * 1024); // MB
+  const cpu = os.loadavg()[0].toFixed(2);
+  const memory = (process.memoryUsage().rss / 1024 / 1024).toFixed(2);
 
   res.status(200).json({
     status: "ok",
-    uptime: process.uptime(),
-    cpu: `${cpuUsage.toFixed(2)}%`,
-    memory: `${memoryUsage.toFixed(2)}MB`,
+    cpu: cpu,
+    memory: memory
   });
 });
 
-// Endpoint 3: GET /me
-app.get('/me', (req, res) => {
+// GET /me
+app.get('/me', authMiddleware, (req, res) => {
   res.status(200).json({
-    name: 'Ayodeji Arib',   
-    email: 'dejiwilliams9@gmail.com',     
-    github_url: 'https://github.com/deji2ghost',
-    repo_name: "personal-api"
+    name: 'Ayodeji Arib',
+    email: 'dejiwilliams9@gmail.com',
+    github: 'https://github.com/deji2ghost',
+    repo_name: 'personal-api'
   });
 });
-
-// app.use("/", authMiddleware);
-// app.use("/health", authMiddleware);
-// app.use("/me", authMiddleware);
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
