@@ -3,6 +3,30 @@ const os = require('os');
 const app = express();
 const PORT = 3000;
 
+const API_KEY = "PUT_THE_KEY_FROM_DISCORD_HERE"; // ← this is the critical part
+
+const authMiddleware = (req, res, next) => {
+  const apiKeyHeader = req.headers["x-api-key"];
+  const authHeader = req.headers["authorization"];
+
+  let key = null;
+
+  if (apiKeyHeader) {
+    key = apiKeyHeader;
+  } else if (authHeader && authHeader.startsWith("Bearer ")) {
+    key = authHeader.split(" ")[1];
+  }
+
+  if (!key || key !== API_KEY) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  next();
+};
+
+// ✅ This line is the key fix — auth applies to ALL routes now
+app.use(authMiddleware);
+
 // GET /
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'API is running' });
